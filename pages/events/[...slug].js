@@ -1,22 +1,44 @@
 import { useRouter } from "next/router";
-import { getFilteredEvents } from "../../dummy-data";
+import useSWR from "swr";
+// import { getFilteredEvents } from "../../helpers/api-util";
 import EventsList from "../../components/events/EventsList";
-import { Fragment } from "react";
+import { Fragment, useEffect, useState } from "react";
 import ResultsTitle from "../../components/events/ResultsTitle";
 import LinkButton from "../../components/elements/LinkButton";
 import ErrorAlert from "../../components/elements/error-alert/ErrorAlert";
 
-const FilteredEventPage = () => {
+const FilteredEventPage = (props) => {
   const router = useRouter();
+  const [loadedEvents, setLoadedEvents] = useState();
   const filterData = router.query.slug;
+  const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
-  if (!filterData) {
+  const { data, error } = useSWR(
+    "https://events-project-b1ae2-default-rtdb.asia-southeast1.firebasedatabase.app/events.json",
+    fetcher
+  );
+
+  useEffect(() => {
+    if (data) {
+      const events = [];
+
+      for (const key in data) {
+        events.push({
+          id: key,
+          ...data[key],
+        });
+      }
+
+      setLoadedEvents(events);
+    }
+  }, [data]);
+
+  if (!loadedEvents) {
     return <p className="center">Loading...</p>;
   }
 
   const filteredYear = parseInt(filterData[0]);
   const filteredMonth = parseInt(filterData[1]);
-
   // we can parse to number also by adding
   // const numYear = +filteredYear;
   // const numMonth = +filteredMonth
@@ -25,7 +47,8 @@ const FilteredEventPage = () => {
     isNaN(filteredYear) ||
     isNaN(filteredMonth) ||
     filteredMonth < 1 ||
-    filteredMonth > 12
+    filteredMonth > 12 ||
+    error
   ) {
     return (
       <Fragment>
@@ -39,10 +62,15 @@ const FilteredEventPage = () => {
     );
   }
 
-  const filteredEvents = getFilteredEvents({
-    year: filteredYear,
-    month: filteredMonth,
+  const filteredEvents = loadedEvents.filter((event) => {
+    const eventDate = new Date(event.date);
+    return (
+      eventDate.getFullYear() === filteredYear &&
+      eventDate.getMonth() === filteredMonth - 1
+    );
   });
+
+  // const filteredEvents = props.events;
 
   if (!filteredEvents || filteredEvents.length === 0) {
     return (
@@ -66,4 +94,44 @@ const FilteredEventPage = () => {
   );
 };
 
+// export async function getServerSideProps(context) {
+//   const { params } = context;
+
+//   const filterData = params.slug;
+
+//   const filteredYear = parseInt(filterData[0]);
+//   const filteredMonth = parseInt(filterData[1]);
+
+//   if (
+//     isNaN(filteredYear) ||
+//     isNaN(filteredMonth) ||
+//     filteredMonth < 1 ||
+//     filteredMonth > 12
+//   ) {
+//     return {
+//       props: {
+//         hasError: true,
+//       },
+//       notFound: true,
+//       redirect: {
+//         destination: "/events",
+//       },
+//     };
+//   }
+
+//   const filteredEvents = await getFilteredEvents({
+//     year: filteredYear,
+//     month: filteredMonth,
+//   });
+
+//   return {
+//     props: {
+//       events: filteredEvents,
+//       date: {
+//         year: filteredYear,
+//         month: filteredMonth,
+//       },
+//     },
+//   };
+// }
 export default FilteredEventPage;
