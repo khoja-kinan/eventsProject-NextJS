@@ -6,6 +6,7 @@ import { Fragment, useEffect, useState } from "react";
 import ResultsTitle from "../../components/events/ResultsTitle";
 import LinkButton from "../../components/elements/LinkButton";
 import ErrorAlert from "../../components/elements/error-alert/ErrorAlert";
+import Head from "next/head";
 
 const FilteredEventPage = (props) => {
   const router = useRouter();
@@ -33,12 +34,35 @@ const FilteredEventPage = (props) => {
     }
   }, [data]);
 
+  let pageHeadData = (
+    <Head>
+      <title>Flitered events</title>
+      <meta name="description" content={`All events for specific date`} />
+    </Head>
+  );
+
   if (!loadedEvents) {
-    return <p className="center">Loading...</p>;
+    return (
+      <Fragment>
+        {pageHeadData}
+        <p className="center">Loading...</p>;
+      </Fragment>
+    );
   }
 
   const filteredYear = parseInt(filterData[0]);
   const filteredMonth = parseInt(filterData[1]);
+
+  pageHeadData = (
+    <Head>
+      <title>Flitered events</title>
+      <meta
+        name="description"
+        content={`All events for ${filteredMonth}/${filteredYear}`}
+      />
+    </Head>
+  );
+
   // we can parse to number also by adding
   // const numYear = +filteredYear;
   // const numMonth = +filteredMonth
@@ -52,6 +76,7 @@ const FilteredEventPage = (props) => {
   ) {
     return (
       <Fragment>
+        {pageHeadData}
         <ErrorAlert>
           <p>Invalid Filters !</p>
         </ErrorAlert>
@@ -75,6 +100,7 @@ const FilteredEventPage = (props) => {
   if (!filteredEvents || filteredEvents.length === 0) {
     return (
       <Fragment>
+        {pageHeadData}
         <ErrorAlert>
           <p>No events found</p>
         </ErrorAlert>
@@ -88,6 +114,7 @@ const FilteredEventPage = (props) => {
   const date = new Date(filteredYear, filteredMonth - 1);
   return (
     <Fragment>
+      {pageHeadData}
       <ResultsTitle date={date} />
       <EventsList items={filteredEvents} />
     </Fragment>
