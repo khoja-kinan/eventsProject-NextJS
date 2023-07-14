@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import classes from "./EventItem.module.css";
 import LinkButton from "../elements/LinkButton";
 import DateIcon from "../icons/date-icon";
@@ -15,7 +16,8 @@ const EventItem = (props) => {
   const formattedAddress = location.replace(", ", "\n");
   return (
     <li className={classes.item}>
-      <img src={"/" + image} alt={title} />
+      <Image src={"/" + image} alt={title} width={350} height={160} />
+      {/* <img src={"/" + image} alt={title} /> */}
       <div className={classes.content}>
         <div className={classes.summary}>
           <h2>{title}</h2>
